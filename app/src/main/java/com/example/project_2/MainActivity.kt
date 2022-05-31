@@ -1,35 +1,47 @@
 package com.example.project_2
 
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
+import android.content.Intent
 import android.graphics.Color
-import android.net.Uri
 import android.os.AsyncTask
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
+import com.squareup.picasso.Picasso
 import org.w3c.dom.Document
 import org.w3c.dom.Element
 import org.w3c.dom.Node
 import org.w3c.dom.NodeList
-import java.io.FileOutputStream
-import java.util.*
-import java.net.URL
 import java.io.File
-import java.lang.Exception
-import java.text.SimpleDateFormat
+import java.io.FileOutputStream
+import java.net.URL
 import javax.xml.parsers.DocumentBuilderFactory
 
 
 class MainActivity : AppCompatActivity() {
+    var userName: String=""
+    var numOfGames: Int =0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        var p  =  intent.getStringExtra("userName");
+        if (p != null) {
+            userName=p.toString()
+            println(userName)
+        }
+
+        if(userName.isEmpty()){
+            val intent= Intent(this, Login::class.java)
+            startActivity(intent)
+        }
+
 
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         table=findViewById(R.id.table)
@@ -38,10 +50,33 @@ class MainActivity : AppCompatActivity() {
         downloadData()
     }
 
-    var forex:MutableList<Currency>? = null
-    var kantor:MutableList<Currency>? = null
-    var santander:MutableList<Currency>? = null
-    var games:MutableList<Currency>? = null
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if(item.itemId==R.id.actionSummary){
+            val intent = Intent(this, Summary::class.java)
+            val extras = Bundle()
+
+            println("here   "+numOfGames)
+
+            extras.putString("userName", userName)
+            extras.putInt("numOfGames", numOfGames)
+
+            intent.putExtras(extras)
+            startActivity(intent)
+        }
+        if(item.itemId==R.id.actionLogin){
+            val intent= Intent(this, Login::class.java)
+            startActivity(intent)
+        }
+
+        return true
+    }
+
+    var games:MutableList<Game>? = null
 
     private lateinit var table: TableLayout
 
@@ -50,10 +85,23 @@ class MainActivity : AppCompatActivity() {
         cd.execute()
     }
 
+    fun addGameToDb(id: Int, name:String, year:Int, image:String, position:Int){
+        val gamesDb=GamesDatabase(this, null, 1)
+        val newGame=Game(id, name, year, image, position)
+        gamesDb.addGame(newGame)
+    }
+
+    fun findGame(name:String): Game? {
+        val gamesDb=GamesDatabase(this, null, 1)
+        val foundGame=gamesDb.findGame(name)
+        return foundGame
+    }
+
+    fun getPosition(node: Node){
+
+    }
+
     fun loadData(){
-        forex= mutableListOf()
-        kantor= mutableListOf()
-        santander= mutableListOf()
         games= mutableListOf()
 
         val filename="games.xml"
@@ -69,7 +117,8 @@ class MainActivity : AppCompatActivity() {
                 xmlDoc.documentElement.normalize()
 
                 val items: NodeList=xmlDoc.getElementsByTagName("item")
-                println("length "+items.length)
+                numOfGames=items.length
+                println("length "+numOfGames)
 
 
                 for(i in 0 until items.length-1){
@@ -84,18 +133,14 @@ class MainActivity : AppCompatActivity() {
                         val children = elem.childNodes
 
 
-                        var gamesList:MutableList<Currency>? = null
-//                        var currentCode: String? = null
-//                        var currentRate: String? = null
-//                        var currentDate: String? = null
+                        var gamesList:MutableList<Game>? = null
 
                         var gameName: String? = null
                         var gameImage: String? = null
                         var pubYear: String? = null
+                        var position: String? = null
 
                         gamesList=games
-
-
 
                         for (j in 0 until children.length-1){
                             val node = children.item(j)
@@ -111,6 +156,24 @@ class MainActivity : AppCompatActivity() {
                                     "yearpublished"->{
                                         pubYear=node.textContent
                                     }
+                                    "stats"->{
+//                                        val rating: NodeList? =node.
+//                                        if (rating != null) {
+//                                            println(rating.item(0))
+//                                        }
+//                                            .item(0).firstChild
+//                                        val rating: Node=stats?.item(0).firstChild
+//                                        val ranks=rating?.childNodes
+//
+//                                        for(k in 0 until ranks.length-1){
+//                                            val n=ranks.item(k)
+//                                            if(n is Element && node.nodeName=="ranks"){
+//                                                position=
+//                                                    n.firstChild.attributes.getNamedItem("value").toString()
+//                                                println(position)
+//                                            }
+//                                        }
+                                    }
                                 }
                             }
                         }
@@ -125,8 +188,19 @@ class MainActivity : AppCompatActivity() {
 
                                 val year=pubYear.toInt()
 
-                            val newGame = Currency(gameId, gameName, year, gameImage )
+
+                            val newGame = Game(gameId.toInt(), gameName, year, gameImage )
+                            val foundGame=findGame(gameName)
+
+                            if (foundGame==null) {
+                                addGameToDb(gameId.toInt(), gameName, year, gameImage, 0)
+                            }
                             gamesList.add(newGame)
+
+//                            if(i>10){
+//                                val gamesDb=GamesDatabase(this, null, 1)
+//                                val g=gamesDb.findGame("Coimbra")
+//                            }
                         }
                     }
                 }
@@ -160,7 +234,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun doInBackground(vararg p0: String?): String {
             try {
-//                var url = URL("https://boardgamegeek.com/xmlapi2/collection?username=loutre_on_fire")
+//                var url = URL("https://boardgamegeek.com/xmlapi2/collection?username=$userName&stats=1")
                 var url = URL("http://localhost:3000/games")
 
                 val connection = url.openConnection()
@@ -172,7 +246,6 @@ class MainActivity : AppCompatActivity() {
 
                 if (!testDirectory.exists()) testDirectory.mkdir()
 
-//                val fos = FileOutputStream("$testDirectory/waluty.xml")
                 val fos = FileOutputStream("$testDirectory/games.xml")
                 val data = ByteArray(1024)
                 var count = 0
@@ -203,7 +276,6 @@ class MainActivity : AppCompatActivity() {
 //            catch (e: I0Exception) { return "wyjatek IO" }
 
             return "success"
-
         }
 
 
@@ -213,22 +285,8 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun getImg(src:String): Bitmap? {
-        val imageURL = src
-        var image: Bitmap? = null
-        try {
-            val `in` = java.net.URL(imageURL).openStream()
-            image = BitmapFactory.decodeStream(`in`)
-        }
-        catch (e: Exception) {
-            Log.e("Error Message", e.message.toString())
-            e.printStackTrace()
-        }
-        return image
-    }
 
-
-    fun showGames(games:List<Currency>,name:String) {
+    fun showGames(games:List<Game>,name:String) {
         val leftRowMargin = 0
         val topRowMargin = 0
         val rightRowMargin = 0
@@ -242,16 +300,15 @@ class MainActivity : AppCompatActivity() {
         mediumTextSize = resources.getDimension(R.dimen.font_size_big).toInt()
 
         val rows = games.count()
-        supportActionBar!!.setTitle("nazwa uzytkownika")
+        supportActionBar!!.title = userName
         var textSpacer: TextView? = null
 
-
-        val dateFormat = SimpleDateFormat("HH:mm - dd.MM.yyyy")
+//        val dateFormat = SimpleDateFormat("HH:mm - dd.MM.yyyy")
 //        var date:Date?=null
 
         // -1 oznacza nagłówek
         for (i in -1..rows - 1) {
-            var row: Currency? = null
+            var row: Game? = null
 
             if (i < 0) {
                 //nagłówek
@@ -261,8 +318,6 @@ class MainActivity : AppCompatActivity() {
                 row = games.get(i)
             }
 
-//            if (row!=null)
-//                date=row.date
 
             val tv = TextView(this)
             tv.layoutParams = TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT,
@@ -276,43 +331,25 @@ class MainActivity : AppCompatActivity() {
                 tv.setTextSize(TypedValue.COMPLEX_UNIT_PX, mediumTextSize.toFloat())
             } else run({
                 tv.setBackgroundColor(Color.parseColor("#f8f8f8"))
-//                tv.setText(row?.code)
                 tv.setText(i.toString())
                 tv.setTextSize(TypedValue.COMPLEX_UNIT_PX, mediumTextSize.toFloat())
             })
 
             val tv2=ImageView(this)
-//            val tv2 = TextView(this)
-            if(row?.image!=null)
-                tv2.setImageURI(Uri.parse(row?.image))
 
-            if (i == -1) {
+            if (i != -1){
                 tv2.layoutParams = TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT,
                     TableRow.LayoutParams.MATCH_PARENT)
-//                tv2.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize.toFloat())
-            } else {
-                tv2.layoutParams = TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT,
-                    TableRow.LayoutParams.MATCH_PARENT)
-//                tv2.setTextSize(TypedValue.COMPLEX_UNIT_PX, mediumTextSize.toFloat())
 
+                tv2.setPadding(20, 15, 20, 15)
 
+                Picasso.get()
+                    .load(row?.image)
+                    .resize(100, 100)
+                    .centerCrop()
+                    .into(tv2)
             }
 
-//            tv2.gravity = Gravity.LEFT
-
-            tv2.setPadding(20, 15, 20, 15)
-            if (i == -1) {
-                val tv2_title = TextView(this)
-                tv2_title.text = "thumbnail"
-                tv2.setBackgroundColor(Color.parseColor("#f7f7f7"))
-            } else {
-                tv2.setBackgroundColor(Color.parseColor("#ffffff"))
-//                tv2.setTextColor(Color.parseColor("#000000"))
-//                tv2.setText(row?.image)
-
-//                val img= row?.image?.let { getImg(it) }
-//                tv2.setImageBitmap(img)
-            }
 
             val layCustomer = LinearLayout(this)
             layCustomer.orientation = LinearLayout.VERTICAL
@@ -340,7 +377,7 @@ class MainActivity : AppCompatActivity() {
             } else {
                 tv3.setBackgroundColor(Color.parseColor("#f8f8f8"))
                 tv3.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize.toFloat())
-                tv3.setText(row?.getGameName() + " (" + row?.getPubYear() + ")")
+                tv3.setText(row?.name + " (" + row?.year + ")")
             }
             layCustomer.addView(tv3)
 
@@ -370,13 +407,26 @@ class MainActivity : AppCompatActivity() {
             tr.layoutParams = trParams
 
             tr.addView(tv)
-            tr.addView(tv2)
+
+            if(i<0){
+                val imgTitle=TextView(this)
+                imgTitle.text = "Icon"
+                imgTitle.setBackgroundColor(Color.parseColor("#f7f7f7"))
+                imgTitle.layoutParams = TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT,
+                    TableRow.LayoutParams.MATCH_PARENT)
+                imgTitle.setPadding(20, 15, 20, 15)
+
+                tr.addView(imgTitle)
+
+            } else {
+                tr.addView(tv2)
+            }
+
             tr.addView(layCustomer)
 
             table.addView(tr, trParams)
 
             if (i > -1) {
-
                 val trSep = TableRow(this)
                 val trParamsSep = TableLayout.LayoutParams(TableLayout.LayoutParams.MATCH_PARENT,
                     TableLayout.LayoutParams.WRAP_CONTENT)
@@ -394,8 +444,6 @@ class MainActivity : AppCompatActivity() {
                 trSep.addView(tvSep)
                 table.addView(trSep, trParamsSep)
             }
-
-
         }
 
         val trDate = TableRow(this)
@@ -412,8 +460,6 @@ class MainActivity : AppCompatActivity() {
         tvSep.setBackgroundColor(Color.parseColor("#d9d9d9"))
 
         tvSep.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize.toFloat())
-//        if (date!=null)
-//            tvSep.text=dateFormat.format(date)
 
         trDate.addView(tvSep)
         table.addView(trDate, trParamsSep)

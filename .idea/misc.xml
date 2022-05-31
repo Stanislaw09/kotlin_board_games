@@ -4,6 +4,11 @@
     <option name="filePathToZoomLevelMap">
       <map>
         <entry key="..\:/Users/Stanislaw/Desktop/project_2/app/src/main/res/layout/activity_main.xml" value="0.32065217391304346" />
+        <entry key="..\:/Users/s.gardzielewski/Desktop/kotlin-app/app/src/main/res/layout/activity_login.xml" value="0.375" />
+        <entry key="..\:/Users/s.gardzielewski/Desktop/kotlin-app/app/src/main/res/layout/activity_main.xml" value="0.375" />
+        <entry key="..\:/Users/s.gardzielewski/Desktop/kotlin-app/app/src/main/res/layout/activity_summary.xml" value="0.375" />
+        <entry key="..\:/Users/s.gardzielewski/Desktop/kotlin-app/app/src/main/res/layout/content_summary.xml" value="0.33" />
+        <entry key="..\:/Users/s.gardzielewski/Desktop/kotlin-app/app/src/main/res/menu/menu.xml" value="0.375" />
       </map>
     </option>
   </component>

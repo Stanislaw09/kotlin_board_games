@@ -12,10 +12,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Project_2"
         android:usesCleartextTraffic="true">
-<!--        <meta-data-->
-<!--            android:value=""-->
-<!--            android:name="com.google.android.actions" />-->
-
+        <activity
+            android:name=".Login"
+            android:exported="false" />
+        <activity
+            android:name=".Summary"
+            android:exported="false"
+            android:label="@string/title_activity_summary"
+            android:theme="@style/Theme.Project_2.NoActionBar" /> <!-- <meta-data -->
+        <!-- android:value="" -->
+        <!-- android:name="com.google.android.actions" /> -->
         <activity
             android:name=".MainActivity"
             android:exported="true">
