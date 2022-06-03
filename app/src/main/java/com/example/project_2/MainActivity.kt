@@ -60,8 +60,6 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, Summary::class.java)
             val extras = Bundle()
 
-            println("here   "+numOfGames)
-
             extras.putString("userName", userName)
             extras.putInt("numOfGames", numOfGames)
 
@@ -85,7 +83,7 @@ class MainActivity : AppCompatActivity() {
         cd.execute()
     }
 
-    fun addGameToDb(id: Int, name:String, year:Int, image:String, position:Int){
+    fun addGameToDb(id: Int, name:String, year:Int, image:String, position: String){
         val gamesDb=GamesDatabase(this, null, 1)
         val newGame=Game(id, name, year, image, position)
         gamesDb.addGame(newGame)
@@ -97,8 +95,10 @@ class MainActivity : AppCompatActivity() {
         return foundGame
     }
 
-    fun getPosition(node: Node){
-
+    fun deleteGame(name:String): Boolean {
+        val gamesDb=GamesDatabase(this, null, 1)
+        val res=gamesDb.deleteGame(name)
+        return res
     }
 
     fun loadData(){
@@ -135,10 +135,12 @@ class MainActivity : AppCompatActivity() {
 
                         var gamesList:MutableList<Game>? = null
 
+                        println("current game list lenght"+gamesList?.size.toString())
+
                         var gameName: String? = null
                         var gameImage: String? = null
                         var pubYear: String? = null
-                        var position: String? = null
+                        var position: String=""
 
                         gamesList=games
 
@@ -157,22 +159,27 @@ class MainActivity : AppCompatActivity() {
                                         pubYear=node.textContent
                                     }
                                     "stats"->{
-//                                        val rating: NodeList? =node.
-//                                        if (rating != null) {
-//                                            println(rating.item(0))
-//                                        }
-//                                            .item(0).firstChild
-//                                        val rating: Node=stats?.item(0).firstChild
-//                                        val ranks=rating?.childNodes
-//
-//                                        for(k in 0 until ranks.length-1){
-//                                            val n=ranks.item(k)
-//                                            if(n is Element && node.nodeName=="ranks"){
-//                                                position=
-//                                                    n.firstChild.attributes.getNamedItem("value").toString()
-//                                                println(position)
-//                                            }
-//                                        }
+                                        val rating: Node? =node.getElementsByTagName("rating").item(0) as Element
+                                        val _children=rating?.childNodes
+
+                                        for (k in 0 until _children?.length!!) {
+                                            val n = _children?.item(k)
+
+                                            if(n is Element) {
+                                                when (n.nodeName) {
+                                                    "ranks" -> {
+                                                        val rank = n.getElementsByTagName("rank").item(0)
+                                                        val p=rank.attributes.getNamedItem("value").nodeValue
+
+                                                        if(p=="Not Ranked")
+                                                            position=""
+                                                        else position=p.toString()
+                                                    }
+                                                }
+                                            }
+
+                                        }
+
                                     }
                                 }
                             }
@@ -189,13 +196,27 @@ class MainActivity : AppCompatActivity() {
                                 val year=pubYear.toInt()
 
 
-                            val newGame = Game(gameId.toInt(), gameName, year, gameImage )
+                            val newGame =
+                                position?.let {
+                                    Game(gameId.toInt(), gameName, year, gameImage, position)
+                                }
                             val foundGame=findGame(gameName)
 
                             if (foundGame==null) {
-                                addGameToDb(gameId.toInt(), gameName, year, gameImage, 0)
+                                addGameToDb(gameId.toInt(), gameName, year, gameImage, position)
+                            } else {
+                                var positions=foundGame.position
+                                positions=positions+","+position
+
+                                deleteGame(gameName)
+                                println(positions)
+
+                                addGameToDb(gameId.toInt(), gameName, year, gameImage, positions)
                             }
-                            gamesList.add(newGame)
+
+                            if (newGame != null) {
+                                gamesList.add(newGame)
+                            }
 
 //                            if(i>10){
 //                                val gamesDb=GamesDatabase(this, null, 1)
@@ -318,6 +339,7 @@ class MainActivity : AppCompatActivity() {
                 row = games.get(i)
             }
 
+            // ---------------- tv ----------------------------
 
             val tv = TextView(this)
             tv.layoutParams = TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT,
@@ -335,6 +357,8 @@ class MainActivity : AppCompatActivity() {
                 tv.setTextSize(TypedValue.COMPLEX_UNIT_PX, mediumTextSize.toFloat())
             })
 
+            // ---------------- tv2 ----------------------------
+
             val tv2=ImageView(this)
 
             if (i != -1){
@@ -345,7 +369,7 @@ class MainActivity : AppCompatActivity() {
 
                 Picasso.get()
                     .load(row?.image)
-                    .resize(100, 100)
+                    .resize(120, 120)
                     .centerCrop()
                     .into(tv2)
             }
@@ -355,6 +379,8 @@ class MainActivity : AppCompatActivity() {
             layCustomer.orientation = LinearLayout.VERTICAL
             layCustomer.setPadding(20, 10, 20, 10)
             layCustomer.setBackgroundColor(Color.parseColor("#f8f8f8"))
+
+            // ---------------- tv3 ----------------------------
 
             val tv3 = TextView(this)
             if (i == -1) {
@@ -380,6 +406,35 @@ class MainActivity : AppCompatActivity() {
                 tv3.setText(row?.name + " (" + row?.year + ")")
             }
             layCustomer.addView(tv3)
+
+            // ---------------- tv4 ----------------------------
+
+            val tv4 = TextView(this)
+            if (i == -1) {
+                tv4.layoutParams = TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT,
+                    TableRow.LayoutParams.MATCH_PARENT)
+                tv4.setPadding(5, 5, 0, 5)
+                tv4.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize.toFloat())
+            } else {
+                tv4.layoutParams = TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT,
+                    TableRow.LayoutParams.MATCH_PARENT)
+                tv4.setPadding(5, 0, 0, 5)
+                tv4.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize.toFloat())
+            }
+
+            tv4.gravity = Gravity.TOP
+
+            if (i == -1) {
+                tv4.text = "position in rank"
+                tv4.setBackgroundColor(Color.parseColor("#f0f0f0"))
+            } else {
+                tv4.setBackgroundColor(Color.parseColor("#f8f8f8"))
+                tv4.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize.toFloat())
+
+                val currentPos= row?.position?.split(",")
+                tv4.text = currentPos?.last()
+            }
+            layCustomer.addView(tv4)
 
 
 //            if (i > -1) {
@@ -443,6 +498,12 @@ class MainActivity : AppCompatActivity() {
 
                 trSep.addView(tvSep)
                 table.addView(trSep, trParamsSep)
+            }
+
+            tr.setOnClickListener{
+                var intent = Intent(this@MainActivity, GameRank::class.java)
+                intent.putExtra("gameName", row?.name)
+                startActivity(intent)
             }
         }
 

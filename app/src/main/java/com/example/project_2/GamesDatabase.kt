@@ -25,7 +25,7 @@ class GamesDatabase(context: Context, factory: SQLiteDatabase.CursorFactory?, ve
                 COLUMN_NAME + " TEXT," +
                 COLUMN_YEAR + " INTEGER," +
                 COLUMN_IMAGE + " TEXT," +
-                COLUMN_POSITION + " INTEGER" + ")")
+                COLUMN_POSITION + " TEXT" + ")")
 
 //        val SQL_DELETE_ENTRIES = "DROP TABLE IF EXISTS ${TABLE_GAMES}"
 
@@ -70,7 +70,7 @@ class GamesDatabase(context: Context, factory: SQLiteDatabase.CursorFactory?, ve
             val name=cursor.getString(1)
             val year=cursor.getInt(2)
             val image=cursor.getString(3)
-            val position=cursor.getInt(4)
+            val position=cursor.getString(4)
 
             game=Game(id, name, year, image, position)
             cursor.close()
@@ -78,6 +78,11 @@ class GamesDatabase(context: Context, factory: SQLiteDatabase.CursorFactory?, ve
 
         db.close()
         return game
+    }
+
+    fun clearDB(){
+        val db = this.writableDatabase
+        db.execSQL("delete * from " + TABLE_GAMES);
     }
 
     fun deleteGame(gameName: String):Boolean{

@@ -5,9 +5,9 @@ class Game{
     var name: String? = null
     var year: Int=0
     var image: String?=null
-    var position: Int=0
+    var position: String
 
-    constructor(id: Int, name: String?, year: Int,image: String?, position: Int=0 ){
+    constructor(id: Int, name: String?, year: Int, image: String?, position: String ){
         this.id=id
         this.name=name
         this.year=year
@@ -15,7 +15,7 @@ class Game{
         this.position=position
     }
 
-    constructor(name: String?, year: Int, position: Int=0, image: String?){
+    constructor(name: String?, year: Int,image: String?, position: String ){
         this.name=name
         this.year=year
         if (image != null)   this.image=image
