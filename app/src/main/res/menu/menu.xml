@@ -6,9 +6,4 @@
         android:id="@+id/actionSummary"
         android:title="Summary"
         app:showAsAction="always"/>
-    <item
-        android:iconTint="?attr/background"
-        android:id="@+id/actionLogin"
-        android:title="Login"
-        app:showAsAction="always"/>
 </menu>

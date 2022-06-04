@@ -6,11 +6,12 @@
     android:layout_height="match_parent"
     tools:context=".GameRank">
 
-    <TextView
-        android:id="@+id/currentRank"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        tools:layout_editor_absoluteX="182dp"
-        tools:layout_editor_absoluteY="191dp" />
+
+    <ListView
+        android:id="@+id/list"
+        android:layout_width="409dp"
+        android:layout_height="729dp"
+        tools:layout_editor_absoluteX="1dp"
+        tools:layout_editor_absoluteY="1dp"
+        tools:ignore="MissingConstraints" />
 </androidx.constraintlayout.widget.ConstraintLayout>

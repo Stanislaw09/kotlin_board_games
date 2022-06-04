@@ -14,6 +14,8 @@
         android:layout_marginStart="44dp"
         android:layout_marginTop="152dp"
         android:text="user name"
+        android:textColor="#1F2D7A"
+        android:textSize="18dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -31,7 +33,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="50dp"
-        android:text="games number"
+        android:text="number of games"
+        android:textColor="#1F2D7A"
+        android:textSize="18dp"
         app:layout_constraintStart_toStartOf="@+id/textView"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
 
@@ -39,7 +43,6 @@
         android:id="@+id/gamesNum"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TextView"
         app:layout_constraintBottom_toBottomOf="@+id/textView3"
         app:layout_constraintEnd_toEndOf="@+id/userName"
         app:layout_constraintStart_toStartOf="@+id/userName"
@@ -51,7 +54,9 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="44dp"
         android:layout_marginTop="67dp"
-        android:text="date o last  sync"
+        android:text="last sync"
+        android:textColor="#1F2D7A"
+        android:textSize="18dp"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView3" />
 
@@ -59,12 +64,12 @@
         android:id="@+id/synchronizeBtn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="68dp"
-        android:onClick="synchronizeData"
+        android:layout_marginTop="124dp"
+        android:onClick="refresh"
         android:text="Sync"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/clearDataBtn"
-        app:layout_constraintHorizontal_bias="0.282"
+        app:layout_constraintHorizontal_bias="0.268"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView11" />
 
@@ -78,25 +83,27 @@
         app:layout_constraintBottom_toBottomOf="@+id/synchronizeBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="@+id/synchronizeBtn"
-        app:layout_constraintVertical_bias="1.0"
+        app:layout_constraintVertical_bias="0.0"
         tools:ignore="MissingConstraints" />
 
     <TextView
         android:id="@+id/lastSync"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="TextView"
         app:layout_constraintBaseline_toBaselineOf="@+id/textView11"
         app:layout_constraintEnd_toEndOf="@+id/gamesNum"
         app:layout_constraintStart_toStartOf="@+id/gamesNum" />
 
     <TextView
         android:id="@+id/textView10"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="64dp"
+        android:background="#688BC34A"
+        android:paddingTop="50dp"
+        android:paddingBottom="10dp"
         android:text="Summary"
-        android:textSize="20sp"
+        android:textAlignment="center"
+        android:textSize="22dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />

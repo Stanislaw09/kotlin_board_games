@@ -13,7 +13,8 @@
         android:layout_marginStart="16dp"
         android:ems="10"
         android:inputType="textPersonName"
-        android:text="user name"
+        android:text=""
+        android:hint="user name"
         app:layout_constraintBaseline_toBaselineOf="@+id/sendUserName"
         app:layout_constraintStart_toStartOf="parent" />
 

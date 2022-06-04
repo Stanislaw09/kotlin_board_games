@@ -2,6 +2,7 @@ package com.example.project_2
 
 import android.content.Intent
 import android.graphics.Color
+import android.icu.text.SimpleDateFormat
 import android.os.AsyncTask
 import android.os.Bundle
 import android.util.TypedValue
@@ -20,12 +21,15 @@ import org.w3c.dom.NodeList
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URL
+import java.util.*
 import javax.xml.parsers.DocumentBuilderFactory
+import kotlin.system.exitProcess
 
 
 class MainActivity : AppCompatActivity() {
     var userName: String=""
     var numOfGames: Int =0
+    var lastSync=""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,7 +38,29 @@ class MainActivity : AppCompatActivity() {
         var p  =  intent.getStringExtra("userName");
         if (p != null) {
             userName=p.toString()
-            println(userName)
+        }
+
+
+        var c  =  intent.getStringExtra("clear");
+        if (c == "true") {
+            intent.putExtra("clear", "false")
+            clearData()
+        }
+
+        var d  =  intent.getStringExtra("refresh");
+        if (d != null) {
+            userName=d
+
+            if (d != "false" && d.isNotEmpty()) {
+
+                val sdf = SimpleDateFormat("dd/M/yy hh:mm")
+                val currentDate = sdf.format(Date())
+                lastSync=currentDate
+
+                intent.putExtra("refresh", "false")
+                downloadData()
+                Toast.makeText(this, "Data synced (～￣▽￣)～", Toast.LENGTH_SHORT).show()
+            }
         }
 
         if(userName.isEmpty()){
@@ -42,12 +68,40 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         table=findViewById(R.id.table)
         loadData()
         showData()
         downloadData()
+    }
+
+    fun clearData(){
+        userName=""
+        val filename="games.xml"
+        val path=filesDir
+        val inDir=File(path, "XML")
+        val file=File(inDir, filename)
+
+        if(file.exists()){
+            file.delete()
+        }
+
+        println("step 1")
+
+        val testDirectory = File("$filesDir/XML")
+        testDirectory.delete()
+
+        println("step 2")
+
+//        val gamesDb=GamesDatabase(this, null, 1)
+//        gamesDb.clearDB()
+
+        println("step 3")
+
+        val intent= Intent(this, Login::class.java)
+        startActivity(intent)
+
+        println("step 4")
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -61,13 +115,10 @@ class MainActivity : AppCompatActivity() {
             val extras = Bundle()
 
             extras.putString("userName", userName)
-            extras.putInt("numOfGames", numOfGames)
+            extras.putInt("numOfGames", numOfGames-1)
+            extras.putString("syncDate", lastSync)
 
             intent.putExtras(extras)
-            startActivity(intent)
-        }
-        if(item.itemId==R.id.actionLogin){
-            val intent= Intent(this, Login::class.java)
             startActivity(intent)
         }
 
@@ -135,12 +186,10 @@ class MainActivity : AppCompatActivity() {
 
                         var gamesList:MutableList<Game>? = null
 
-                        println("current game list lenght"+gamesList?.size.toString())
-
                         var gameName: String? = null
                         var gameImage: String? = null
                         var pubYear: String? = null
-                        var position: String=""
+                        var position=""
 
                         gamesList=games
 
@@ -186,15 +235,7 @@ class MainActivity : AppCompatActivity() {
                         }
 
                         if(gamesList!=null && gameName!=null && gameId!=null && pubYear!=null && gameImage!=null){
-//                            val rates=currentRate.split(" ")
-//                            val r=rates[0].toDouble()
-//                            val ch=rates[1].toDouble()
-//                            val pattern ="EEE, dd MMM yyyy HH:mm:ss Z"
-//                            val sdf=SimpleDateFormat(pattern, Locale.ENGLISH)
-//                            val d=sdf.parse((currentDate))
-
-                                val year=pubYear.toInt()
-
+                            val year=pubYear.toInt()
 
                             val newGame =
                                 position?.let {
@@ -205,23 +246,20 @@ class MainActivity : AppCompatActivity() {
                             if (foundGame==null) {
                                 addGameToDb(gameId.toInt(), gameName, year, gameImage, position)
                             } else {
+                                val sdf = SimpleDateFormat("dd/M/yyyy hh:mm")
+                                val currentDate = sdf.format(Date())
+
                                 var positions=foundGame.position
+                                position+="                            "+currentDate
                                 positions=positions+","+position
 
                                 deleteGame(gameName)
-                                println(positions)
-
                                 addGameToDb(gameId.toInt(), gameName, year, gameImage, positions)
                             }
 
                             if (newGame != null) {
                                 gamesList.add(newGame)
                             }
-
-//                            if(i>10){
-//                                val gamesDb=GamesDatabase(this, null, 1)
-//                                val g=gamesDb.findGame("Coimbra")
-//                            }
                         }
                     }
                 }
@@ -234,13 +272,6 @@ class MainActivity : AppCompatActivity() {
 
         if(games!=null)
             showGames(games!!, "Games")
-
-//        if(forex!=null)
-//            showGames(forex!!, "Forex")
-//        if(kantor!=null)
-//            showGames(kantor!!, "Kantor")
-//        if(santander!=null)
-//            showGames(santander!!, "Santander")
     }
 
 
@@ -255,8 +286,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun doInBackground(vararg p0: String?): String {
             try {
-//                var url = URL("https://boardgamegeek.com/xmlapi2/collection?username=$userName&stats=1")
-                var url = URL("http://localhost:3000/games")
+                var url = URL("https://boardgamegeek.com/xmlapi2/collection?username=$userName&stats=1")
 
                 val connection = url.openConnection()
                 connection.connect()
@@ -292,10 +322,6 @@ class MainActivity : AppCompatActivity() {
                 return "fuck"
             }
 
-//            catch (e: MalformedURLException) { return "Zly URL" }
-//            catch (e: FileNotFoundException) { return "Brak pliku" }
-//            catch (e: I0Exception) { return "wyjatek IO" }
-
             return "success"
         }
 
@@ -324,15 +350,10 @@ class MainActivity : AppCompatActivity() {
         supportActionBar!!.title = userName
         var textSpacer: TextView? = null
 
-//        val dateFormat = SimpleDateFormat("HH:mm - dd.MM.yyyy")
-//        var date:Date?=null
-
-        // -1 oznacza nagłówek
         for (i in -1..rows - 1) {
             var row: Game? = null
 
             if (i < 0) {
-                //nagłówek
                 textSpacer = TextView(this)
                 textSpacer.text = ""
             } else {
@@ -345,7 +366,7 @@ class MainActivity : AppCompatActivity() {
             tv.layoutParams = TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT,
                 TableRow.LayoutParams.WRAP_CONTENT)
             tv.gravity = Gravity.LEFT
-            tv.setPadding(20, 15, 20, 15)
+            tv.setPadding(20, 15, 10, 10)
 
             if (i == -1) run {
                 tv.text = "indeks"
@@ -365,7 +386,7 @@ class MainActivity : AppCompatActivity() {
                 tv2.layoutParams = TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT,
                     TableRow.LayoutParams.MATCH_PARENT)
 
-                tv2.setPadding(20, 15, 20, 15)
+                tv2.setPadding(20, 15, 20, 10)
 
                 Picasso.get()
                     .load(row?.image)
@@ -437,21 +458,6 @@ class MainActivity : AppCompatActivity() {
             layCustomer.addView(tv4)
 
 
-//            if (i > -1) {
-//                val tv3b = TextView(this)
-//                tv3b.layoutParams = TableRow.LayoutParams(TableRow.LayoutParams.WRAP_CONTENT,
-//                    TableRow.LayoutParams.WRAP_CONTENT)
-//
-//                tv3b.gravity = Gravity.RIGHT
-//                tv3b.setTextSize(TypedValue.COMPLEX_UNIT_PX, smallTextSize.toFloat())
-//                tv3b.setPadding(5, 1, 0, 5)
-//                tv3b.setTextColor(Color.parseColor("#aaaaaa"))
-//                tv3b.setBackgroundColor(Color.parseColor("#f8f8f8"))
-//                tv3b.setText(row?.formatChange())
-//                layCustomer.addView(tv3b)
-//            }
-
-
             // add table row
             val tr = TableRow(this)
             tr.id = i + 1
@@ -469,7 +475,7 @@ class MainActivity : AppCompatActivity() {
                 imgTitle.setBackgroundColor(Color.parseColor("#f7f7f7"))
                 imgTitle.layoutParams = TableRow.LayoutParams(TableRow.LayoutParams.MATCH_PARENT,
                     TableRow.LayoutParams.MATCH_PARENT)
-                imgTitle.setPadding(20, 15, 20, 15)
+                imgTitle.setPadding(20, 15, 20, 10)
 
                 tr.addView(imgTitle)
 
